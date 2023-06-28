@@ -4,7 +4,8 @@ import { QueryBuilder, formatQuery } from 'react-querybuilder';
 import Avatar from "../assets/avatar.jpg";
 import axios from "axios";
 import Map from "../components/Map";
-import Switch from '@material-ui/core';
+import ReactGoogleAutocomplete from "react-google-autocomplete";
+// import Switch from '@material-ui/core';
 
 const fields = [
     { name: 'name', label: 'First Name' },
@@ -22,20 +23,37 @@ const initialQuery = {
 export default function Home() {
 
     const [query, setQuery] = useState(initialQuery);
+    const [googleLoaded, setGoogleLoaded] = useState(false);
+    const [geoCoordinates, setGeoCoordinates] = useState(null);
 
     const handleSearchClick = async () => {
+        if (geoCoordinates) {
+            const res = await axios.post('http://localhost:3001/geo-search', {
+                ...geoCoordinates, radius: 2
+            });
+            console.log(res);
+            return;
+        }
         console.log(formatQuery(query));
         const res = await axios.get('http://localhost:3001/');
         console.log(res);
+    }
+
+    const handleSelect = (place) => {
+        setGeoCoordinates({lat: place?.geometry?.location?.lat(), lon: place?.geometry?.location?.lng()});
     }
     
     return (
         <div className="home">
             <div className="search-section">
                 <div className="row">
+                    { googleLoaded && <ReactGoogleAutocomplete 
+                        apiKey={process.env.REACT_APP_GOOGLE_API_KEY}
+                        onPlaceSelected={handleSelect}
+                    />}
                     <AsyncSelect />
                     <button className="search-btn" onClick={handleSearchClick}>Search</button>
-                    <Switch></Switch>
+                    {/* <Switch></Switch> */}
                 </div>
                 <div className="row">
                     <QueryBuilder
@@ -66,7 +84,7 @@ export default function Home() {
                      </div>
                 </div>
                 <div className="map-view">
-                    <Map />
+                    <Map setGoogleLoaded={setGoogleLoaded}/>
                 </div>
             </div>
         </div>

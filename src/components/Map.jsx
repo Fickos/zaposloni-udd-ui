@@ -18,6 +18,7 @@ const DrawButton = (props) => {
 }
 
 export default function Map (props) {
+    const { setGoogleLoaded } = props;
 
     const [map, setMap] = useState(null);
     const [maps, setMaps] = useState(null);
@@ -152,13 +153,14 @@ export default function Map (props) {
                 libraries: ["visualization", "drawing", "places"],
                 language: "en",
             }}
-            defaultCenter={{ lat: 45, lng: 17 }}
-            defaultZoom={13}
+            defaultCenter={{ lat: 45.24492, lng: 19.84771 }}
+            defaultZoom={14}
             onGoogleApiLoaded={({ map, maps }) => {
                 // handleMapLoaded(map, maps);
                 // mapRef.current = map;
                 setMaps(maps);
                 setMap(map);
+                setGoogleLoaded(true);
                 // dispatch(search());
               }}
             draggable={drawingDisabled}
