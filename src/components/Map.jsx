@@ -2,7 +2,7 @@ import GoogleMapReact from "google-map-react";
 import { useEffect, useState } from "react";
 import DrawingDisabled from "../assets/draw-icon-disabled.svg";
 import DrawingEnabled from "../assets/draw-icon-enabled.svg";
-import { _polyComplete, mergePolygons, polygonContainsPoint, returnBounds } from "../utils/map-utils";
+import { _polyComplete, getPointsOfCircle, mergePolygons, polygonContainsPoint, returnBounds } from "../utils/map-utils";
 
 const DrawButton = (props) => {
     const { drawingDisabled, setDrawingDisabled } = props;
@@ -17,20 +17,16 @@ const DrawButton = (props) => {
     )
 }
 
+const Marker = ({ children }) => children;
+
 export default function Map (props) {
-    const { setGoogleLoaded } = props;
+    const { setGoogleLoaded, navigatorLocation, searchRadius, pins } = props;
 
     const [map, setMap] = useState(null);
     const [maps, setMaps] = useState(null);
     const [drawingDisabled, setDrawingDisabled] = useState(true);
     const [polygonsDrawn, setPolygonsDrawn] = useState([]);
-
-    const clearPolys = () => {
-        for (let poly of polygonsDrawn) {
-            poly.setMap(null);
-        }
-        setPolygonsDrawn([]);
-    }
+    const [surroundingCircle, setSurroundingCircle] = useState(null);
 
     useEffect(() => {
         if (maps) {
@@ -92,7 +88,7 @@ export default function Map (props) {
                 const polygonsCopy = polygonsDrawn;
                 polygonsCopy.push(polygon);
                 const coordinates = polygonsCopy.map((p) => returnBounds(p));
-                console.log(coordinates);
+                console.log(coordinates); // TRIGGER SEARCH WITH THIS
                 setPolygonsDrawn(polygonsCopy);
     
                 if (!drawingDisabled) {
@@ -138,6 +134,72 @@ export default function Map (props) {
         }
       }, [drawingDisabled, polygonsDrawn, map, maps]);
 
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const fitNewBounds = (points) => {
+        if (points.length && map) {
+          const boundsS = new maps.LatLngBounds();
+    
+          points.forEach((point) => {
+            boundsS.extend(point);
+          });
+          map.fitBounds(boundsS);
+        }
+      };
+  
+      useEffect (() => {
+        if (navigatorLocation) {
+          const circlePaths = getPointsOfCircle(navigatorLocation, searchRadius / 1000);
+    
+          fitNewBounds(
+            circlePaths.map((point) => new maps.LatLng(point.lat, point.lng))
+          );
+    
+          const circle = new maps.Circle({
+            strokeColor: "#0BAEB7",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#0BAEB7",
+            fillOpacity: 0.2,
+            center: navigatorLocation,
+            radius: searchRadius,
+          });
+          if (surroundingCircle) {
+            surroundingCircle.setMap(null);
+          }
+          circle.setMap(map);
+          setSurroundingCircle(circle);
+        } else {
+          if (surroundingCircle) {
+            surroundingCircle.setMap(null);
+            setSurroundingCircle(null);
+          }
+        }
+  
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [navigatorLocation, searchRadius]);
+
+      useEffect(() => {
+        if (polygonsDrawn && polygonsDrawn.length) {
+          let polygonPoints = [];
+          polygonsDrawn.forEach((polygon) => {
+            polygon
+              .getPath()
+              .getArray()
+              .forEach((point) => {
+                polygonPoints.push(point);
+              });
+          });
+          fitNewBounds(polygonPoints);
+        }
+      }, [fitNewBounds, polygonsDrawn]);
+
+      const clearPolys = () => {
+        for(let poly of polygonsDrawn) {
+          poly.setMap(null);
+        }
+        setPolygonsDrawn([]);
+      }
+
     return (
         <div className="map">
             <DrawButton
@@ -148,25 +210,33 @@ export default function Map (props) {
                 X
             </div>}
             <GoogleMapReact
-            bootstrapURLKeys={{
-                key: process.env.REACT_APP_GOOGLE_API_KEY,
-                libraries: ["visualization", "drawing", "places"],
-                language: "en",
-            }}
-            defaultCenter={{ lat: 45.24492, lng: 19.84771 }}
-            defaultZoom={14}
-            onGoogleApiLoaded={({ map, maps }) => {
-                // handleMapLoaded(map, maps);
-                // mapRef.current = map;
-                setMaps(maps);
-                setMap(map);
-                setGoogleLoaded(true);
-                // dispatch(search());
+              bootstrapURLKeys={{
+                  key: process.env.REACT_APP_GOOGLE_API_KEY,
+                  libraries: ["visualization", "drawing", "places"],
+                  language: "en",
               }}
-            draggable={drawingDisabled}
-            yesIWantToUseGoogleMapApiInternals
+              defaultCenter={{ lat: 45.24492, lng: 19.84771 }}
+              defaultZoom={14}
+              onGoogleApiLoaded={({ map, maps }) => {
+                  // handleMapLoaded(map, maps);
+                  // mapRef.current = map;
+                  setMaps(maps);
+                  setMap(map);
+                  setGoogleLoaded(true);
+                  // dispatch(search());
+              }}
+              draggable={drawingDisabled}
+              yesIWantToUseGoogleMapApiInternals
             >
-
+              {pins.map((pin, i) => (
+                <Marker
+                  key={i}
+                  lat={pin.lat}
+                  lng={pin.lng}
+                >
+                  <div className="marker"></div>
+                </Marker>
+              ))}
             </GoogleMapReact>
         </div>
     )

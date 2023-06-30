@@ -1,3 +1,6 @@
+/* eslint-disable no-redeclare */
+/* eslint-disable eqeqeq */
+/* eslint-disable no-array-constructor */
 import ClipperLib from "clipper-lib";
 import { FPoint } from "clipper-lib-fpoint";
 
@@ -153,3 +156,28 @@ export function mergePolygons(polygons, maps) {
 
   return polygoneParcelleHeig;
 }
+
+export const getPointsOfCircle = (point, radius, points = 32, dir = 1) => {
+  var d2r = Math.PI / 180; // degrees to radians
+  var r2d = 180 / Math.PI; // radians to degrees
+  var earthsradius = 6371; // km
+  // find the raidus in lat/lon
+  var rlat = (radius / earthsradius) * r2d;
+  var rlng = rlat / Math.cos(point.lat * d2r);
+  var extp = new Array();
+  if (dir == 1) {
+    var start = 0;
+    var end = points + 1; // one extra here makes sure we connect the path
+  } else {
+    var start = points + 1;
+    var end = 0;
+  }
+  for (var i = start; dir == 1 ? i < end : i > end; i = i + dir) {
+    var theta = Math.PI * (i / (points / 2));
+    let ey = point.lng + rlng * Math.cos(theta); // center a + radius x * cos(theta)
+    let ex = point.lat + rlat * Math.sin(theta); // center b + radius y * sin(theta)
+    extp.push({ lat: ex, lng: ey });
+  }
+  return extp;
+};
+

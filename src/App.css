@@ -37,6 +37,43 @@ body {
   gap: 1em;
 }
 
+input {
+  background-color: white;
+  min-height: 40px;
+  box-shadow: 1px solid #3a8791;
+  border: 1px solid #B6B6B6;
+  border-radius: 8px;
+  padding-left: 1em;
+  font-size: 1rem;
+}
+
+.pac-target-input {
+  background-color: white;
+  min-height: 40px;
+  min-width: 30em;
+  display: flex;
+  box-shadow: 1px solid #3a8791;
+  border: 1px solid #B6B6B6;
+  border-radius: 8px;
+  padding-left: 1em;
+  font-size: 1rem;
+  line-height: 1.25rem;
+}
+
+.pac-target-input:hover, input:hover {
+  outline: none;
+  border: 1px solid #3a8791;
+}
+
+.pac-target-input:focus, input:focus {
+  outline: none;
+}
+
+.number-input {
+  min-width: 5em;
+  width: 5em;
+}
+
 .search-btn {
   border: none;
   border-radius: 8px;
@@ -173,6 +210,8 @@ button:hover {
   flex-wrap: wrap;
   justify-content: space-around;
   gap: 25px;
+  max-height: inherit;
+  overflow-y: scroll;
 }
 
 .card {
@@ -227,4 +266,92 @@ button:hover {
   align-items: center;
   justify-content: center;
   z-index: 1;
+}
+
+h2 {
+  margin-left: 3em;
+  color: #484848;
+  font-family: Nunito;
+}
+
+.full-name, .address, .email, .education {
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 180px;
+}
+
+.clear-btn {
+  background: #fff;
+  box-shadow: 0px 3.5px 3.5px rgba(0,0,0,0.1);
+  color: #484848;
+  border: 1px solid #0baeb7;
+  width: 6.5em;
+  min-height: 40px;
+  font-weight: 700;
+  border-radius: 8px;
+  text-transform: uppercase;
+  font-size: 1rem;
+  line-height: 1rem;
+  letter-spacing: 2px;
+}
+
+.cv-content {
+  max-height: 80px;
+  overflow-y: scroll;
+}
+
+.cv-content::-webkit-scrollbar {
+  display: none;
+}
+
+em {
+  font-weight: 700;
+}
+
+.marker {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #ff6737;
+  border: 2px solid white;
+  z-index: 12;
+}
+
+.marker-outer {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #0BAEB7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marker-inner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #0BAEB7;
+}
+
+.cluster {
+  border-radius: 50%;
+  background-color: #ff6737;
+  border: 2px solid white;
+  width: 50px;
+  height: 50px;
+  color: white;
+  padding: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 20px;
+  min-width: 20px;
+  z-index: 2;
+}
+
+.cluster:hover,
+.marker:hover,
+.price-marker:hover {
+  cursor: pointer;
 }
