@@ -20,7 +20,7 @@ const DrawButton = (props) => {
 const Marker = ({ children }) => children;
 
 export default function Map (props) {
-    const { setGoogleLoaded, navigatorLocation, searchRadius, pins } = props;
+    const { setGoogleLoaded, navigatorLocation, searchRadius, pins, triggerDrawSearch } = props;
 
     const [map, setMap] = useState(null);
     const [maps, setMaps] = useState(null);
@@ -89,6 +89,8 @@ export default function Map (props) {
                 polygonsCopy.push(polygon);
                 const coordinates = polygonsCopy.map((p) => returnBounds(p));
                 console.log(coordinates); // TRIGGER SEARCH WITH THIS
+                triggerDrawSearch(coordinates);
+
                 setPolygonsDrawn(polygonsCopy);
     
                 if (!drawingDisabled) {
@@ -116,6 +118,7 @@ export default function Map (props) {
                   polygonsCopy.push(merged);
                   const coordinates = polygonsCopy.map((p) => returnBounds(p));
                   console.log(coordinates);
+                  triggerDrawSearch(coordinates);
                   setPolygonsDrawn(polygonsCopy);
     
                   if (!drawingDisabled) {
@@ -132,6 +135,7 @@ export default function Map (props) {
             maps.event.clearListeners(map, "mousedown");
           }
         }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [drawingDisabled, polygonsDrawn, map, maps]);
 
       // eslint-disable-next-line react-hooks/exhaustive-deps

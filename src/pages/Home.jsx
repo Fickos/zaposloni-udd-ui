@@ -5,13 +5,14 @@ import Avatar from "../assets/avatar.jpg";
 import axios from "axios";
 import Map from "../components/Map";
 import ReactGoogleAutocomplete from "react-google-autocomplete";
+import JobApplicationModal from "../components/JobApplicationModal";
 // import Switch from '@material-ui/core';
 
 const fields = [
     { name: 'name', label: 'First Name' },
     { name: 'surname', label: 'Last Name' },
     { name: 'education', label: 'Education' },
-    { name: 'content', label: 'Content from CV' },
+    { name: 'cvContent', label: 'Content from CV' },
     { name: 'coverLetterContent', label: 'Content from cover letter' }
   ];
   
@@ -28,18 +29,21 @@ export default function Home() {
     const [geoCoordinates, setGeoCoordinates] = useState(null);
     const [radius, setRadius] = useState(2);
     const [phrase, setPhrase] = useState(false);
+    const [phraseTerm, setPhraseTerm] = useState('');
 
     const [cvContent, setCvContent] = useState('');
     const [clContent, setClContent] = useState('');
 
     const [results, setResults] = useState(null);
 
+    const [selectedElement, setSelectedElement] = useState(null);
+
     const handleSearchClick = async () => {
         if (phrase) {
-            const res = await axios.post('http://localhost:3001/phrase', {
-
-            });
-            setResults(res);
+            console.log('EXECUTING PHRASE SEARCH');
+            const res = await axios.get(`http://localhost:3001/phrase-search?phraseValue=${phraseTerm}`);
+            console.log('RETURN VALUE FROM PHRASE SEARCH', res);
+            setResults(res.data);
             return;
         }
         if (geoCoordinates) {
@@ -80,17 +84,21 @@ export default function Home() {
                 console.log('RETURN VALUE FROM REGULAR SEARCH (SINGLE FIELD-EDUCATION)\n', res.data);
                 setResults(res.data);
             }
-            // const res = await axios.post('http://localhost:3001/search', {
-                
-            // });
-            // setResults(res.data);
         }
-        // const res = await axios.get('http://localhost:3001/');
-        // console.log(res);
+    }
+
+    const triggerDrawSearch = async (coordinates) => {
+        const res = await axios.post('http://localhost:3001/geo-search-drawing', { polygonCoordinates: coordinates[0] });
+        console.log('RETURN VALUE FROM DRAW SEARCH: ', res.data);
+        setResults(res.data);
     }
 
     const handleSelect = (place) => {
         setGeoCoordinates({lat: place?.geometry?.location?.lat(), lon: place?.geometry?.location?.lng()});
+    }
+
+    const handleCardSelection = (element) => {
+        setSelectedElement(element);
     }
 
     const displayHeader = () => {
@@ -109,7 +117,7 @@ export default function Home() {
             for (let hit of results?.hits?.hits) {
                 const el = document.getElementById(`${cnt}-hlc`);
                 if (el) {
-                    el.innerHTML = hit?.highlight?.content;
+                    el.innerHTML = hit?.highlight?.cvContent ?? hit?._source?.cvContent;
                 }
                 cnt++;
             }
@@ -120,10 +128,14 @@ export default function Home() {
         <div className="home">
             <div className="search-section">
                 <div className="row">
-                    { googleLoaded && <ReactGoogleAutocomplete 
+                    { (googleLoaded && !phrase) && <ReactGoogleAutocomplete 
                         apiKey={process.env.REACT_APP_GOOGLE_API_KEY}
                         onPlaceSelected={handleSelect}
                     />}
+                    {
+                        phrase && 
+                        <input type="text" onChange={(e) => setPhraseTerm(e.target.value)} className="phrase-input" placeholder="Enter phrase"/>
+                    }
                     {/* <AsyncSelect /> */}
                     <button className="search-btn" onClick={handleSearchClick}>Search</button>
                     {
@@ -135,6 +147,13 @@ export default function Home() {
                         <button className="clear-btn" onClick={() => {setGeoCoordinates(null); setRadius(2);} }>
                             Clear
                         </button>
+                    }
+                    {
+                        !geoCoordinates && 
+                        <div className="row-phrase">
+                            <label>Phrase search: </label>
+                            <input type="checkbox" onChange={(e) => setPhrase(e.target.checked)} />
+                        </div>
                     }
                     {/* <Switch></Switch> */}
                 </div>
@@ -164,7 +183,7 @@ export default function Home() {
                 <div className="result-list">
                     {
                         results?.hits?.hits?.map((result, i) => (
-                            <div className="card" key={i}>
+                            <div className="card" key={i} onClick={() => handleCardSelection(result)}>
                                 <img src={Avatar} alt="avatar" style={{width: "80px", height: "80px", borderRadius: "50%" }}/>
                                 <div className="full-name">{result?._source?.name} {result?._source?.surname}</div>
                                 <div className="address">{result?._source?.address}</div>
@@ -183,9 +202,12 @@ export default function Home() {
                         pins={results?.hits?.hits.map((el) => (
                             { lat: el?._source?.location?.lat , lng: el?._source?.location?.lon }
                         )) ?? []}
+                        triggerDrawSearch={triggerDrawSearch}
                     />
                 </div>
             </div>
+            <div className="absolute-add-button" onClick={() => window.location.replace('upload')}>+</div>
+            <JobApplicationModal isOpen={selectedElement !== null} handleCloseModal={() => setSelectedElement(null)} contentLabel="ContentLabelPlaceholkd" item={selectedElement} />
         </div>
     )
 }
